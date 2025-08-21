@@ -5,7 +5,7 @@ import { getOrCreateUser } from "../users.js";
 passport.use(new GithubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: "http://https://auth-tests.onrender.com:3000/auth/github/callback"
+    callbackURL: "http://https://auth-tests.onrender.com/auth/github/callback"
 }, async (accessToken, refreshToken, profile, done) => {
     try {
         const user = await getOrCreateUser(profile);

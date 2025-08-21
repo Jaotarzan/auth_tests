@@ -7,7 +7,7 @@ passport.use(new OIDCStrategy({
   clientSecret: process.env.MS_CLIENT_SECRET,
   responseType: "code",
   responseMode: "form_post",
-  redirectUrl: "http://https://auth-tests.onrender.com:3000/auth/microsoft/callback",
+  redirectUrl: "http://https://auth-tests.onrender.com/auth/microsoft/callback",
   allowHttpForRedirectUrl: true, // só em dev
   scope: ["openid", "profile", "email"]
 }, (iss, sub, profile, accessToken, refreshToken, done) => {

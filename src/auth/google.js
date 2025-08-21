@@ -6,7 +6,7 @@ import { getOrCreateUser } from "../users.js";
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "http://https://auth-tests.onrender.com:3000/auth/google/callback"
+    callbackURL: "http://https://auth-tests.onrender.com/auth/google/callback"
 }, async (accessToken, refreshToken, profile, done) => {
     try {
         const user = await getOrCreateUser(profile);
