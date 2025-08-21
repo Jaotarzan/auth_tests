@@ -3,7 +3,7 @@ import { generateRegistrationOptions, verifyRegistrationResponse, generateAuthen
 import { getAllUsers } from "../users.js";
 
 const router = Router();
-const rpID = "EuSouLindo.local-key";
+const rpID = "EuSouLindo.local";
 const origin = `${rpID}:5173`;
 
 router.get("/register/options", async (req, res) => {
