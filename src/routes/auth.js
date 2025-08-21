@@ -17,7 +17,7 @@ router.get("/github", passport.authenticate("github", { scope: ["user:email"] })
 router.get("/github/callback", 
     passport.authenticate("github", { failureRedirect: "/fail" }),
     (req, res) => {
-        res.redirect("https://192.168.0.103:5173/dashboard");
+        res.redirect("https://EuSouLindo.local:5173/dashboard");
     }
 );  
 
