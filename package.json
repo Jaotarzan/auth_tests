@@ -1,0 +1,30 @@
+{
+  "name": "express-social-webauthn",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node -r dotenv/config src/index.js",
+    "dev": "nodemon -r dotenv/config src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@simplewebauthn/server": "^13.1.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.1",
+    "express-session": "^1.18.2",
+    "helmet": "^8.1.0",
+    "morgan": "^1.10.1",
+    "passport": "^0.7.0",
+    "passport-apple": "^2.0.2",
+    "passport-azure-ad": "^4.3.5",
+    "passport-github2": "^0.1.12",
+    "passport-google-oauth20": "^2.0.0",
+    "passport-microsoft": "^2.1.0"
+  },
+  "type": "module"
+}
