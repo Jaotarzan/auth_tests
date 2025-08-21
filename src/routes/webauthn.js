@@ -70,7 +70,7 @@ router.post("/register/verify/:userId", authMiddleware, async (req, res) => {
     // remover challenge após uso
     delete challenges[userId];
 
-    res.json({ success: true });
+    res.json({ success: true, message: `Registro bem-sucedido para ${user.credentials}` });
   } catch (err) {
     console.error(err);
     res.status(500).send("Erro interno");
