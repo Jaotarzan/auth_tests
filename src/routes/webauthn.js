@@ -92,7 +92,7 @@ router.get("/authn/options/:userId", authMiddleware, async (req, res) => {
     allowCredentials: user.credentials.map(c => ({
       id: c.credential.id,
       type: c.credentialType,
-      transports: c.transports || ["internal"],
+      transports: c.transports 
     })),
     rpID,
   });
@@ -108,6 +108,8 @@ router.get("/authn/options/:userId", authMiddleware, async (req, res) => {
     ...c,
     id: base64url.encode(c.id),
   }));
+
+  console.log("Opções de autenticação:", options);
 
   res.json(options);
 });
