@@ -19,15 +19,10 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin) return callback(null, true); // Postman, curl
-    if (allowedOrigins.indexOf(origin) === -1) {
-      return callback(new Error("CORS não permitido"), false);
-    }
-    return callback(null, true);
-  },
+  origin: true,
   credentials: true
 }));
+
 
 // Middleware para parsing de JSON
 app.use(express.json());
