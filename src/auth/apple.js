@@ -7,7 +7,7 @@ passport.use(new AppleStrategy({
     teamID: process.env.APPLE_TEAM_ID,
     keyID: process.env.APPLE_KEY_ID,
     privateKey: process.env.APPLE_PRIVATE_KEY,
-    callbackURL: "http://192.168.0.103:3000/auth/apple/callback"
+    callbackURL: "http://https://auth-tests.onrender.com:3000/auth/apple/callback"
 }, async (accessToken, refreshToken, profile, done) => {
     try {
         const user = await getOrCreateUser(profile);
