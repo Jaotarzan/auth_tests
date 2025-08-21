@@ -47,6 +47,8 @@ router.post("/register/verify/:userId", authMiddleware, async (req, res) => {
   const { attestationResponse } = req.body;
   const user = getUserById(userId);
   if (!user) return res.status(404).send("Usuário não encontrado");
+  console.log("Usuário encontrado para registro:", user);
+  console.log("Resposta de atestação:", attestationResponse);
 
   try {
     const verification = await verifyRegistrationResponse({
