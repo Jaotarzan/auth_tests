@@ -8,6 +8,7 @@ import cors from "cors";
 import authRoutes from "./routes/auth.js";
 import webauthnRoutes from "./routes/webauthn.js";
 import "./auth/passport.js";
+import { authMiddleware } from "./middlewares/authMiddleware.js";
 
 const app = express();
 
@@ -28,8 +29,17 @@ app.use("/auth", authRoutes);
 app.use("/webauthn", webauthnRoutes);
 
 // Rota principal (exemplo, apenas teste)
-app.get("/", (req, res) => {
-  res.json({ message: "API funcionando sem cookies!" });
+app.get("/", authMiddleware, (req, res) => {
+  try {
+  res.json({
+    id: req.user.id,
+    username: req.user.username,
+    message: `Bem-vindo ${req.user.username}!`
+  });
+  } catch (error) {
+    console.error("Erro ao processar requisição:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
 });
 
 // Inicialização do servidor
