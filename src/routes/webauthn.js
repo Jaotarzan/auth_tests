@@ -34,11 +34,13 @@ router.get("/register/options/:userId", authMiddleware, async (req, res) => {
     userName: user.username,
   });
 
+const challenge = base64url.encode(options.challenge);
+
   // Salvar challenge para verificação posterior
-  challenges[userId] = options.challenge;
+  challenges[userId] = challenge;
 
   // Converter challenge e user.id para base64url
-  options.challenge = base64url.encode(options.challenge);
+  options.challenge = challenge;
   options.user.id = base64url.encode(options.user.id);
 
   res.json(options);
@@ -94,11 +96,13 @@ router.get("/authn/options/:userId", authMiddleware, async (req, res) => {
     rpID,
   });
 
+  const challenge = base64url.encode(options.challenge);
+
   // Salvar challenge para verificação
-  challenges[userId] = options.challenge;
+  challenges[userId] = challenge;
 
   // Converter challenge e allowCredentials[].id para base64url
-  options.challenge = base64url.encode(options.challenge);
+  options.challenge = challenge;
   options.allowCredentials = options.allowCredentials.map(c => ({
     ...c,
     id: base64url.encode(c.id),
