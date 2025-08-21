@@ -31,7 +31,7 @@ app.use("/webauthn", webauthnRoutes);
 // Rota principal (exemplo, apenas teste)
 app.get("/", authMiddleware, (req, res) => {
   try {
-  console.log(req.user)
+  console.log(req.user, 'precisa ser o caba')
   res.json({
     id: req.user.id,
     username: req.user.username,

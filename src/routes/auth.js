@@ -31,6 +31,7 @@ router.get("/github", passport.authenticate("github", { scope: ["user:email"] })
 router.get("/github/callback",
   passport.authenticate("github", { session: false, failureRedirect: "/fail" }),
   (req, res) => {
+    console.log("ocara q presica exixtir", req.user);
     const token = generateToken(req.user);
     res.redirect(`${FRONTEND_URL}/dashboard?token=${token}`);
   }
