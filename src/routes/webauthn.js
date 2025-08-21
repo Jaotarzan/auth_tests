@@ -90,7 +90,9 @@ router.get("/authn/options/:userId", authMiddleware, async (req, res) => {
 
   const options = await generateAuthenticationOptions({
     allowCredentials: user.credentials.map(c => ({
-      id: c.credentialID,            // já é ArrayBuffer
+      id: Buffer.isBuffer(c.credentialID)
+        ? c.credentialID
+        : Buffer.from(c.credentialID, "base64url"), // converte string para Buffer
       type: "public-key",
       transports: c.transports || ["internal"],
     })),
@@ -99,6 +101,16 @@ router.get("/authn/options/:userId", authMiddleware, async (req, res) => {
 
   // salvar challenge em memória (não mexe no objeto enviado ao cliente)
   challenges[userId] = options.challenge;
+
+  console.log(`\n[AUTH OPTIONS] userId: ${userId}`);
+  console.log("Challenges salvos:", challenges[userId]);
+  console.log(
+    "AllowCredentials:",
+    user.credentials.map(c => ({
+      credentialID: c.credentialID,
+      transports: c.transports || ["internal"],
+    }))
+  );
 
   res.json(options); // envia cru, sem base64url
 });
@@ -111,9 +123,20 @@ router.post("/authn/verify/:userId", authMiddleware, async (req, res) => {
   const user = getUserById(userId);
   if (!user || !user.credentials) return res.status(400).send("Sem credenciais");
 
+  console.log(`\n[AUTH VERIFY] userId: ${userId}`);
+  console.log("Received assertionResponse.id:", assertionResponse.id);
+  console.log("Expected challenge:", challenges[userId]);
+
   // localizar o autenticador pelo credentialID
   const authenticator = user.credentials.find(c =>
-    c.credentialID.equals(Buffer.from(assertionResponse.id, "base64url"))
+    Buffer.from(c.credentialID, "base64url").equals(
+      Buffer.from(assertionResponse.id, "base64url")
+    )
+  );
+
+  console.log(
+    "Matching authenticator:",
+    authenticator ? authenticator.credentialID : null
   );
 
   if (!authenticator) return res.status(400).send("Credencial não encontrada");
@@ -127,6 +150,8 @@ router.post("/authn/verify/:userId", authMiddleware, async (req, res) => {
       authenticator,
     });
 
+    console.log("Verification result:", verification);
+
     if (!verification.verified) return res.status(400).send("Falha na autenticação");
 
     // remover challenge após verificação
@@ -138,8 +163,3 @@ router.post("/authn/verify/:userId", authMiddleware, async (req, res) => {
     res.status(500).send("Erro interno");
   }
 });
-
-
-export default router;
-
-
