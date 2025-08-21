@@ -8,7 +8,7 @@ import cors from "cors";
 import authRoutes from "./routes/auth.js";
 import webauthnRoutes from "./routes/webauthn.js";
 import "./auth/passport.js";
-import { authMiddleware } from "./middlewares/authMiddleware.js";
+import { authMiddleware } from "./middlewares/auth.js";
 
 const app = express();
 
