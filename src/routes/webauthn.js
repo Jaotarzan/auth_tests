@@ -1,84 +1,3 @@
-import { Router } from "express";
-import {
-  generateRegistrationOptions,
-  verifyRegistrationResponse,
-  generateAuthenticationOptions,
-  verifyAuthenticationResponse,
-} from "@simplewebauthn/server";
-import { getUserById } from "../users.js";
-import { authMiddleware } from "../middlewares/auth.js";
-
-const router = Router();
-const rpID = "eusoulindo.local";
-const origin = `https://${rpID}:5173`;
-
-// Temporário: salvar challenges em memória
-const challenges = {}; // { [userId]: challenge }
-
-// -----------------------
-// Registro WebAuthn
-// -----------------------
-router.get("/register/options/:userId", authMiddleware, async (req, res) => {
-  const { userId } = req.params;
-  if (req.user.id !== userId) return res.status(403).send("Acesso negado");
-
-  const user = getUserById(userId);
-  if (!user) return res.status(404).send("Usuário não encontrado");
-
-  const options = await generateRegistrationOptions({
-    rpName: "Meu App",
-    rpID,
-    userID: Buffer.from(user.uuid, "utf8"),
-    userName: user.username,
-    attestationType: "none",
-  });
-
-  // salvar challenge temporário
-  challenges[userId] = options.challenge;
-
-  res.json(options); // ⚠️ não converta challenge/id, mande cru
-});
-
-router.post("/register/verify/:userId", authMiddleware, async (req, res) => {
-  const { userId } = req.params;
-  if (req.user.id !== userId) return res.status(403).send("Acesso negado");
-
-  const { attestationResponse } = req.body;
-  const user = getUserById(userId);
-  if (!user) return res.status(404).send("Usuário não encontrado");
-
-  try {
-    const verification = await verifyRegistrationResponse({
-      response: attestationResponse,
-      expectedChallenge: challenges[userId],
-      expectedOrigin: origin,
-      expectedRPID: rpID,
-    });
-
-    if (!verification.verified) return res.status(400).send("Falha no registro");
-
-    const { credentialID, credentialPublicKey, counter } =
-      verification.registrationInfo;
-
-    if (!user.credentials) user.credentials = [];
-    user.credentials.push({
-      credentialID,
-      credentialPublicKey,
-      counter,
-      transports:
-        attestationResponse.response.transports || ["internal"], // se disponível
-    });
-
-    delete challenges[userId]; // limpar challenge
-
-    console.log("Registro bem-sucedido:", user.credentials);
-    res.json({ success: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Erro interno");
-  }
-});
-
 // -----------------------
 // Autenticação WebAuthn
 // -----------------------
@@ -87,21 +6,21 @@ router.get("/authn/options/:userId", authMiddleware, async (req, res) => {
   if (req.user.id !== userId) return res.status(403).send("Acesso negado");
 
   const user = getUserById(userId);
-  if (!user || !user.credentials)
-    return res.status(400).send("Sem credenciais");
+  if (!user || !user.credentials) return res.status(400).send("Sem credenciais");
 
   const options = await generateAuthenticationOptions({
-    allowCredentials: user.credentials.map((c) => ({
-      id: c.credentialID,
+    allowCredentials: user.credentials.map(c => ({
+      id: c.credentialID,            // já é ArrayBuffer
       type: "public-key",
-      transports: c.transports,
+      transports: c.transports || ["internal"],
     })),
     rpID,
   });
 
+  // salvar challenge em memória (não mexe no objeto enviado ao cliente)
   challenges[userId] = options.challenge;
 
-  res.json(options); // ⚠️ não altere challenge/id
+  res.json(options); // envia cru, sem base64url
 });
 
 router.post("/authn/verify/:userId", authMiddleware, async (req, res) => {
@@ -110,14 +29,11 @@ router.post("/authn/verify/:userId", authMiddleware, async (req, res) => {
 
   const { assertionResponse } = req.body;
   const user = getUserById(userId);
-  if (!user || !user.credentials)
-    return res.status(400).send("Sem credenciais");
+  if (!user || !user.credentials) return res.status(400).send("Sem credenciais");
 
-  // procurar o authenticator certo
-  const authenticator = user.credentials.find((c) =>
-    Buffer.from(c.credentialID).equals(
-      Buffer.from(assertionResponse.id, "base64url")
-    )
+  // localizar o autenticador pelo credentialID
+  const authenticator = user.credentials.find(c =>
+    c.credentialID.equals(Buffer.from(assertionResponse.id, "base64url"))
   );
 
   if (!authenticator) return res.status(400).send("Credencial não encontrada");
@@ -131,12 +47,9 @@ router.post("/authn/verify/:userId", authMiddleware, async (req, res) => {
       authenticator,
     });
 
-    if (!verification.verified)
-      return res.status(400).send("Falha na autenticação");
+    if (!verification.verified) return res.status(400).send("Falha na autenticação");
 
-    // atualizar counter do authenticator
-    authenticator.counter = verification.authenticationInfo.newCounter;
-
+    // remover challenge após verificação
     delete challenges[userId];
 
     res.json({ success: true });
@@ -145,5 +58,3 @@ router.post("/authn/verify/:userId", authMiddleware, async (req, res) => {
     res.status(500).send("Erro interno");
   }
 });
-
-export default router;
