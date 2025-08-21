@@ -14,7 +14,7 @@ const app = express();
 
 // Configuração de CORS
 const allowedOrigins = [
-  "http://192.168.0.103:5173", // seu frontend dev
+  "https://192.168.0.103:5173", // seu frontend dev
   "https://auth-tests.onrender.com/" // frontend em produção
 ];
 
