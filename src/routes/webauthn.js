@@ -28,7 +28,7 @@ router.get("/register/options/:userId", authMiddleware, async (req, res) => {
   const options = await generateRegistrationOptions({
     rpName: "Meu App",
     rpID,
-    userID: user.id, // pode ser string direto
+    userID: Buffer.from(user.uuid, "utf8"),
     userName: user.username,
     attestationType: "none",
   });
