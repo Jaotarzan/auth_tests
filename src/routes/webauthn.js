@@ -4,7 +4,7 @@ import { getUserById } from "../users.js";
 
 const router = Router();
 const rpID = "192.168.0.103";
-const origin = `http://${rpID}:5173`;
+const origin = `${rpID}:5173`;
 
 router.get("/register/options", async (req, res) => {
     try {

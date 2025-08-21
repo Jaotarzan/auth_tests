@@ -14,7 +14,7 @@ const app = express();
 
 // Configuração de CORS
 app.use(cors({
-  origin: ["http://192.168.0.103:5173", "https://auth-tests.onrender.com"],
+  origin: ["192.168.0.103:5173", "https://auth-tests.onrender.com"],
   credentials: true // Permitir envio de cookies
 }));
 
