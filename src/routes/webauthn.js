@@ -92,7 +92,7 @@ router.get("/authn/options/:userId", authMiddleware, async (req, res) => {
     allowCredentials: user.credentials.map(c => ({
       id: c.credential.id,
       type: c.credentialType,
-      transports: ["internal", "usb", "nfc", "ble"], // permite todos
+      transports: ["internal"], // permite todos
     })),
     rpID,
   });
