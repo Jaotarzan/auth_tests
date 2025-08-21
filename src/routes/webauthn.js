@@ -25,7 +25,7 @@ router.get("/register/options/:userId", authMiddleware, async (req, res) => {
   if (!user) return res.status(404).send("Usuário não encontrado");
   console.log("Usuário encontrado:", user);
 
-  const options = generateRegistrationOptions({
+  const options = await generateRegistrationOptions({
     rpName: "Meu App",
     rpID,
     // userID agora como Buffer (não string)
@@ -78,7 +78,7 @@ router.get("/authn/options/:userId", authMiddleware, async (req, res) => {
   const user = getUserById(userId);
   if (!user || !user.credentials) return res.status(400).send("Sem credenciais");
 
-  const options = generateAuthenticationOptions({
+  const options = await generateAuthenticationOptions({
     allowCredentials: user.credentials.map(c => ({
       id: c.credential.id,
       type: c.credentialType,
