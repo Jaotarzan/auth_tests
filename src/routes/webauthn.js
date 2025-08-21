@@ -89,14 +89,14 @@ router.get("/authn/options/:userId", authMiddleware, async (req, res) => {
   if (!user || !user.credentials) return res.status(400).send("Sem credenciais");
 
   const options = await generateAuthenticationOptions({
-    allowCredentials: user.credentials.map(c => {
-      console.log("[DEBUG] Credential from user:", c);
-      return {
-        id: Buffer.from(c.credential.id, "base64url"), // usar c.credential.id
-        type: "public-key",
-        transports: c.transports || ["internal"],
-      };
-    }),
+  allowCredentials: user.credentials.map(c => {
+    console.log("[DEBUG] Credential from user:", c);
+    return {
+      id: c.credential.id, // já é string Base64URL do registro
+      type: "public-key",
+      transports: c.transports || ["internal"],
+    };
+  }),
     rpID,
   });
 
