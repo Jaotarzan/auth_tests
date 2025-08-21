@@ -3,9 +3,9 @@ import {
   generateRegistrationOptions,
   verifyRegistrationResponse,
   generateAuthenticationOptions,
-  verifyAuthenticationResponse
+  verifyAuthenticationResponse,
 } from "@simplewebauthn/server";
-import { getAllUsers, getUserById } from "../users.js";
+import { getUserById } from "../users.js";
 import { authMiddleware } from "../middlewares/auth.js";
 import base64url from "base64url";
 import { Buffer } from "buffer";
@@ -13,6 +13,9 @@ import { Buffer } from "buffer";
 const router = Router();
 const rpID = "eusoulindo.local";
 const origin = `https://${rpID}:5173`;
+
+// Temporário: salvar challenges em memória
+const challenges = {}; // { [userId]: challenge }
 
 // -----------------------
 // Registro WebAuthn
@@ -23,17 +26,18 @@ router.get("/register/options/:userId", authMiddleware, async (req, res) => {
 
   const user = getUserById(userId);
   if (!user) return res.status(404).send("Usuário não encontrado");
-  console.log("Usuário encontrado:", user);
 
   const options = await generateRegistrationOptions({
     rpName: "Meu App",
     rpID,
-    // userID agora como Buffer (não string)
-    userID: Buffer.from(user.id, "utf8"),
+    userID: Buffer.from(user.id, "utf8"), // agora Buffer
     userName: user.username,
   });
-  console.log("Opções de registro:", options);
-  // Converter challenge e user.id para base64url para frontend
+
+  // Salvar challenge para verificação posterior
+  challenges[userId] = options.challenge;
+
+  // Converter challenge e user.id para base64url
   options.challenge = base64url.encode(options.challenge);
   options.user.id = base64url.encode(options.user.id);
 
@@ -47,13 +51,11 @@ router.post("/register/verify/:userId", authMiddleware, async (req, res) => {
   const { attestationResponse } = req.body;
   const user = getUserById(userId);
   if (!user) return res.status(404).send("Usuário não encontrado");
-  console.log("Usuário encontrado para registro:", user);
-  console.log("Resposta de atestação:", attestationResponse);
 
   try {
     const verification = await verifyRegistrationResponse({
       response: attestationResponse,
-      expectedChallenge: attestationResponse.response.clientDataJSON.challenge,
+      expectedChallenge: challenges[userId], // usar challenge salvo
       expectedOrigin: origin,
       expectedRPID: rpID,
     });
@@ -62,6 +64,9 @@ router.post("/register/verify/:userId", authMiddleware, async (req, res) => {
 
     if (!user.credentials) user.credentials = [];
     user.credentials.push(verification.registrationInfo);
+
+    // remover challenge após uso
+    delete challenges[userId];
 
     res.json({ success: true });
   } catch (err) {
@@ -89,6 +94,9 @@ router.get("/authn/options/:userId", authMiddleware, async (req, res) => {
     rpID,
   });
 
+  // Salvar challenge para verificação
+  challenges[userId] = options.challenge;
+
   // Converter challenge e allowCredentials[].id para base64url
   options.challenge = base64url.encode(options.challenge);
   options.allowCredentials = options.allowCredentials.map(c => ({
@@ -112,13 +120,17 @@ router.post("/authn/verify/:userId", authMiddleware, async (req, res) => {
   try {
     const verification = await verifyAuthenticationResponse({
       response: assertionResponse,
-      expectedChallenge: assertionResponse.response.clientDataJSON.challenge,
+      expectedChallenge: challenges[userId],
       expectedOrigin: origin,
       expectedRPID: rpID,
       credential: authenticator,
     });
 
     if (!verification.verified) return res.status(400).send("Falha na autenticação");
+
+    // remover challenge após verificação
+    delete challenges[userId];
+
     res.json({ success: true });
   } catch (err) {
     console.error(err);
