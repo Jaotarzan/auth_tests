@@ -89,30 +89,24 @@ router.get("/authn/options/:userId", authMiddleware, async (req, res) => {
   if (!user || !user.credentials) return res.status(400).send("Sem credenciais");
 
   const options = await generateAuthenticationOptions({
-    allowCredentials: user.credentials.map(c => ({
-      id: Buffer.isBuffer(c.credentialID)
-        ? c.credentialID
-        : Buffer.from(c.credentialID, "base64url"), // converte string para Buffer
-      type: "public-key",
-      transports: c.transports || ["internal"],
-    })),
+    allowCredentials: user.credentials.map(c => {
+      console.log("[DEBUG] Credential from user:", c);
+      return {
+        id: Buffer.from(c.credential.id, "base64url"), // usar c.credential.id
+        type: "public-key",
+        transports: c.transports || ["internal"],
+      };
+    }),
     rpID,
   });
 
-  // salvar challenge em memória (não mexe no objeto enviado ao cliente)
   challenges[userId] = options.challenge;
 
-  console.log(`\n[AUTH OPTIONS] userId: ${userId}`);
-  console.log("Challenges salvos:", challenges[userId]);
-  console.log(
-    "AllowCredentials:",
-    user.credentials.map(c => ({
-      credentialID: c.credentialID,
-      transports: c.transports || ["internal"],
-    }))
-  );
+  console.log(`[AUTH OPTIONS] userId: ${userId}`);
+  console.log("Challenge salvo:", challenges[userId]);
+  console.log("AllowCredentials enviados:", options.allowCredentials.map(c => c.id.toString("base64")));
 
-  res.json(options); // envia cru, sem base64url
+  res.json(options);
 });
 
 router.post("/authn/verify/:userId", authMiddleware, async (req, res) => {
@@ -123,21 +117,18 @@ router.post("/authn/verify/:userId", authMiddleware, async (req, res) => {
   const user = getUserById(userId);
   if (!user || !user.credentials) return res.status(400).send("Sem credenciais");
 
-  console.log(`\n[AUTH VERIFY] userId: ${userId}`);
+  console.log(`[AUTH VERIFY] userId: ${userId}`);
   console.log("Received assertionResponse.id:", assertionResponse.id);
   console.log("Expected challenge:", challenges[userId]);
 
-  // localizar o autenticador pelo credentialID
+  // localizar o autenticador pelo credential.id
   const authenticator = user.credentials.find(c =>
-    Buffer.from(c.credentialID, "base64url").equals(
+    Buffer.from(c.credential.id, "base64url").equals(
       Buffer.from(assertionResponse.id, "base64url")
     )
   );
 
-  console.log(
-    "Matching authenticator:",
-    authenticator ? authenticator.credentialID : null
-  );
+  console.log("Matching authenticator:", authenticator ? authenticator.credential.id : null);
 
   if (!authenticator) return res.status(400).send("Credencial não encontrada");
 
@@ -154,14 +145,10 @@ router.post("/authn/verify/:userId", authMiddleware, async (req, res) => {
 
     if (!verification.verified) return res.status(400).send("Falha na autenticação");
 
-    // remover challenge após verificação
     delete challenges[userId];
-
     res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(500).send("Erro interno");
   }
 });
-
-export default router;
