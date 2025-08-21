@@ -35,7 +35,7 @@ router.get("/register/options/:userId", authMiddleware, async (req, res) => {
 
   // Converter challenge e user.id para base64url para frontend
   options.challenge = base64url.encode(options.challenge);
-  options.user.id = base64url.encode(Buffer.from(user.id, "utf8"));
+options.user.id = base64url.encode(options.user.id);
 
   res.json(options);
 });
