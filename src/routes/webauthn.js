@@ -163,3 +163,5 @@ router.post("/authn/verify/:userId", authMiddleware, async (req, res) => {
     res.status(500).send("Erro interno");
   }
 });
+
+export default router;
