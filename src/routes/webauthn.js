@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { generateRegistrationOptions, verifyRegistrationResponse, generateAuthenticationOptions, verifyAuthenticationResponse } from "@simplewebauthn/server";
-import { getUserById } from "../users.js";
+import { users } from "../users.js";
 
 const router = Router();
 const rpID = "192.168.0.103";
@@ -8,7 +8,7 @@ const origin = `${rpID}:5173`;
 
 router.get("/register/options", async (req, res) => {
     try {
-        const user = req.user;
+        const user = users[0];
         console.log("User in session for registration:", user);
         if (!user || !user.id || !user.username) {
             console.error("Missing user information in session", user);
@@ -17,8 +17,8 @@ router.get("/register/options", async (req, res) => {
         const options = await generateRegistrationOptions({
             rpName: "test",
             rpID,
-            userID: Buffer.from(req.user.id, "utf8"),
-            userName: req.user.username,
+            userID: Buffer.from(user.id, "utf8"),
+            userName: user.username,
         });
         req.session.challenge = options.challenge;
         console.log("Generated registration options:", options);
