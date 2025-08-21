@@ -13,23 +13,36 @@ import "./auth/passport.js";
 const app = express();
 
 // Configuração de CORS
+const allowedOrigins = [
+  "http://192.168.0.103:5173", // seu frontend dev
+  "https://auth-tests.onrender.com/" // frontend em produção
+];
+
 app.use(cors({
-  origin: ["192.168.0.103:5173", "https://auth-tests.onrender.com"],
-  credentials: true // Permitir envio de cookies
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true); // Postman, curl
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(new Error("CORS não permitido"), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true
 }));
 
 // Middleware para parsing de JSON
 app.use(express.json());
 
 // Configuração de sessão
+const IN_PROD = process.env.NODE_ENV === "production";
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || "default_secret", // Garantir que SESSION_SECRET está definido
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
-    httpOnly: true, // Protege contra ataques XSS
-    secure: false, // Deve ser true em produção com HTTPS
-    sameSite: "lax" // Permite cookies em navegação cruzada segura
+    secure: IN_PROD,           
+    httpOnly: true,
+    sameSite: IN_PROD ? "none" : "lax",
   }
 }));
 

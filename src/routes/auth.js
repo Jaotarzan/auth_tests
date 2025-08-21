@@ -8,7 +8,7 @@ router.get("/google", passport.authenticate("google", { scope: ["profile", "emai
 router.get("/google/callback", 
     passport.authenticate("google", { failureRedirect: "/fail" }),
     (req, res) => {
-        res.redirect("/");
+        res.redirect("http://192.168.0.103:5173/dashboard");
     }
 );
 
@@ -17,7 +17,7 @@ router.get("/github", passport.authenticate("github", { scope: ["user:email"] })
 router.get("/github/callback", 
     passport.authenticate("github", { failureRedirect: "/fail" }),
     (req, res) => {
-        res.redirect("/");
+        res.redirect("http://192.168.0.103:5173/dashboard");
     }
 );  
 
@@ -25,7 +25,7 @@ router.get("/github/callback",
 router.get("/microsoft", passport.authenticate("azuread-openidconnect"));
 router.post("/microsoft/callback", 
     passport.authenticate("azuread-openidconnect", { failureRedirect: "/fail" }),
-    (req, res) => res.redirect("/")
+    (req, res) => res.redirect("http://192.168.0.103:5173/dashboard")
 );
 
 //  Apple
