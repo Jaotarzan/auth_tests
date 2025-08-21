@@ -12,14 +12,10 @@ import "./auth/passport.js";
 const app = express();
 
 // Configuração de CORS
-const allowedOrigins = [
-  "https://EuSouLindo.local:5173", // frontend dev
-  "https://auth-tests.onrender.com" // frontend produção
-];
-
 app.use(cors({
-  origin: allowedOrigins,
+  origin: "https://eusoulindo.local:5173"
 }));
+
 
 // Middleware para parsing de JSON
 app.use(express.json());
