@@ -12,3 +12,7 @@ export function getOrCreateUser(user) {
 export function getUserById(id) {
   return users.get(id);
 }
+
+export function getAllUsers() {
+  return Array.from(users.values());
+}

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { generateRegistrationOptions, verifyRegistrationResponse, generateAuthenticationOptions, verifyAuthenticationResponse } from "@simplewebauthn/server";
-import { users } from "../users.js";
+import { getAllUsers } from "../users.js";
 
 const router = Router();
 const rpID = "192.168.0.103";
@@ -8,6 +8,7 @@ const origin = `${rpID}:5173`;
 
 router.get("/register/options", async (req, res) => {
     try {
+        const users = getAllUsers();
         const user = users[0];
         console.log("User in session for registration:", user);
         if (!user || !user.id || !user.username) {
