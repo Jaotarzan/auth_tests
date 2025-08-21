@@ -8,6 +8,7 @@ import {
 import { getAllUsers, getUserById } from "../users.js";
 import { authMiddleware } from "../middlewares/auth.js";
 import base64url from "base64url";
+import { Buffer } from "buffer";
 
 const router = Router();
 const rpID = "eusoulindo.local";
@@ -26,13 +27,14 @@ router.get("/register/options/:userId", authMiddleware, async (req, res) => {
   const options = generateRegistrationOptions({
     rpName: "Meu App",
     rpID,
-    userID: user.id,          // string
+    // userID agora como Buffer (não string)
+    userID: Buffer.from(user.id, "utf8"),
     userName: user.username,
   });
 
-  // Converter challenge e userID para base64url
+  // Converter challenge e user.id para base64url para frontend
   options.challenge = base64url.encode(options.challenge);
-  options.user.id = base64url.encode(Buffer.from(options.user.id, "utf8"));
+  options.user.id = base64url.encode(Buffer.from(user.id, "utf8"));
 
   res.json(options);
 });
