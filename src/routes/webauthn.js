@@ -7,20 +7,17 @@ import {
 } from "@simplewebauthn/server";
 import { getAllUsers, getUserById } from "../users.js";
 import { authMiddleware } from "../middlewares/auth.js";
+import base64url from "base64url";
 
 const router = Router();
 const rpID = "eusoulindo.local";
 const origin = `https://${rpID}:5173`;
 
-// ========================
-// Registro de WebAuthn
-// ========================
-
-// Gerar opções de registro
+// -----------------------
+// Registro WebAuthn
+// -----------------------
 router.get("/register/options/:userId", authMiddleware, async (req, res) => {
   const { userId } = req.params;
-
-  // Confere se o usuário logado está requisitando suas próprias credenciais
   if (req.user.id !== userId) return res.status(403).send("Acesso negado");
 
   const user = getUserById(userId);
@@ -29,14 +26,17 @@ router.get("/register/options/:userId", authMiddleware, async (req, res) => {
   const options = generateRegistrationOptions({
     rpName: "Meu App",
     rpID,
-    userID: Buffer.from(user.id, "utf8"),
+    userID: user.id,          // string
     userName: user.username,
   });
 
-  res.json({ ...options, challenge: options.challenge });
+  // Converter challenge e userID para base64url
+  options.challenge = base64url.encode(options.challenge);
+  options.user.id = base64url.encode(Buffer.from(options.user.id, "utf8"));
+
+  res.json(options);
 });
 
-// Verificar registro
 router.post("/register/verify/:userId", authMiddleware, async (req, res) => {
   const { userId } = req.params;
   if (req.user.id !== userId) return res.status(403).send("Acesso negado");
@@ -65,11 +65,9 @@ router.post("/register/verify/:userId", authMiddleware, async (req, res) => {
   }
 });
 
-// ========================
-// Autenticação de WebAuthn
-// ========================
-
-// Gerar opções de autenticação
+// -----------------------
+// Autenticação WebAuthn
+// -----------------------
 router.get("/authn/options/:userId", authMiddleware, async (req, res) => {
   const { userId } = req.params;
   if (req.user.id !== userId) return res.status(403).send("Acesso negado");
@@ -86,10 +84,16 @@ router.get("/authn/options/:userId", authMiddleware, async (req, res) => {
     rpID,
   });
 
-  res.json({ ...options, challenge: options.challenge });
+  // Converter challenge e allowCredentials[].id para base64url
+  options.challenge = base64url.encode(options.challenge);
+  options.allowCredentials = options.allowCredentials.map(c => ({
+    ...c,
+    id: base64url.encode(c.id),
+  }));
+
+  res.json(options);
 });
 
-// Verificar autenticação
 router.post("/authn/verify/:userId", authMiddleware, async (req, res) => {
   const { userId } = req.params;
   if (req.user.id !== userId) return res.status(403).send("Acesso negado");
