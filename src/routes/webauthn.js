@@ -12,10 +12,18 @@ const router = Router();
 const rpID = "eusoulindo.local";
 const origin = `https://${rpID}:5173`;
 
-// Rota para gerar opções de registro
-router.get("/register/options", authMiddleware, async (req, res) => {
-  const users = getAllUsers();
-  const user = users.find(u => u.id === req.user.id);
+// ========================
+// Registro de WebAuthn
+// ========================
+
+// Gerar opções de registro
+router.get("/register/options/:userId", authMiddleware, async (req, res) => {
+  const { userId } = req.params;
+
+  // Confere se o usuário logado está requisitando suas próprias credenciais
+  if (req.user.id !== userId) return res.status(403).send("Acesso negado");
+
+  const user = getUserById(userId);
   if (!user) return res.status(404).send("Usuário não encontrado");
 
   const options = generateRegistrationOptions({
@@ -25,24 +33,28 @@ router.get("/register/options", authMiddleware, async (req, res) => {
     userName: user.username,
   });
 
-  // Envia o challenge junto com a resposta
   res.json({ ...options, challenge: options.challenge });
 });
 
-// Rota para verificar registro
-router.post("/register/verify", authMiddleware, async (req, res) => {
-  const { response, challenge } = req.body; // challenge enviado pelo frontend
+// Verificar registro
+router.post("/register/verify/:userId", authMiddleware, async (req, res) => {
+  const { userId } = req.params;
+  if (req.user.id !== userId) return res.status(403).send("Acesso negado");
+
+  const { attestationResponse } = req.body;
+  const user = getUserById(userId);
+  if (!user) return res.status(404).send("Usuário não encontrado");
+
   try {
     const verification = await verifyRegistrationResponse({
-      response,
-      expectedChallenge: challenge,
+      response: attestationResponse,
+      expectedChallenge: attestationResponse.response.clientDataJSON.challenge,
       expectedOrigin: origin,
       expectedRPID: rpID,
     });
 
     if (!verification.verified) return res.status(400).send("Falha no registro");
 
-    const user = getUserById(req.user.id);
     if (!user.credentials) user.credentials = [];
     user.credentials.push(verification.registrationInfo);
 
@@ -53,9 +65,16 @@ router.post("/register/verify", authMiddleware, async (req, res) => {
   }
 });
 
-// Opções de autenticação
-router.get("/authn/options", authMiddleware, async (req, res) => {
-  const user = getUserById(req.user.id);
+// ========================
+// Autenticação de WebAuthn
+// ========================
+
+// Gerar opções de autenticação
+router.get("/authn/options/:userId", authMiddleware, async (req, res) => {
+  const { userId } = req.params;
+  if (req.user.id !== userId) return res.status(403).send("Acesso negado");
+
+  const user = getUserById(userId);
   if (!user || !user.credentials) return res.status(400).send("Sem credenciais");
 
   const options = generateAuthenticationOptions({
@@ -71,17 +90,20 @@ router.get("/authn/options", authMiddleware, async (req, res) => {
 });
 
 // Verificar autenticação
-router.post("/authn/verify", authMiddleware, async (req, res) => {
-  const { response, challenge } = req.body;
-  const user = getUserById(req.user.id);
+router.post("/authn/verify/:userId", authMiddleware, async (req, res) => {
+  const { userId } = req.params;
+  if (req.user.id !== userId) return res.status(403).send("Acesso negado");
+
+  const { assertionResponse } = req.body;
+  const user = getUserById(userId);
   if (!user || !user.credentials) return res.status(400).send("Sem credenciais");
 
   const authenticator = user.credentials[0].credential;
 
   try {
     const verification = await verifyAuthenticationResponse({
-      response,
-      expectedChallenge: challenge,
+      response: assertionResponse,
+      expectedChallenge: assertionResponse.response.clientDataJSON.challenge,
       expectedOrigin: origin,
       expectedRPID: rpID,
       credential: authenticator,
