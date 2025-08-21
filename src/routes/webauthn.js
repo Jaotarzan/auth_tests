@@ -128,7 +128,7 @@ router.post("/authn/verify/:userId", authMiddleware, async (req, res) => {
     )
   );
 
-  console.log("Matching authenticator:", authenticator ? authenticator.credential.id : null);
+  console.log("Matching authenticator:", authenticator ? authenticator : null);
 
   if (!authenticator) return res.status(400).send("Credencial não encontrada");
 
