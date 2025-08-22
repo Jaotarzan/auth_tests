@@ -3,7 +3,7 @@ import passport from "passport";
 import jwt from "jsonwebtoken";
 
 const router = Router();
-const FRONTEND_URL = "https://eusoulindo.local:5173";
+const FRONTEND_URL = "https://frontend-ten-eta-85.vercel.app";
 
 // Helper para gerar token JWT
 const generateToken = (user) => {

@@ -14,7 +14,7 @@ const app = express();
 
 // Configuração de CORS
 app.use(cors({
-  origin: "https://eusoulindo.local:5173"
+  origin: "https://frontend-ten-eta-85.vercel.app"
 }));
 
 

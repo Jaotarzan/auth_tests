@@ -11,7 +11,7 @@ import base64url from "base64url";
 import { Buffer } from "buffer";
 
 const router = Router();
-const rpID = "eusoulindo.local";
+const rpID = "frontend-ten-eta-85.vercel.app";
 const origin = `https://${rpID}:5173`;
 
 // Temporário: salvar challenges em memória
