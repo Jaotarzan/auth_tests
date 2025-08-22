@@ -14,7 +14,7 @@ const app = express();
 
 // Configuração de CORS
 app.use(cors({
-  origin: "https://frontend-ten-eta-85.vercel.app"
+  origin: "https://frontend-eaxf.vercel.app"
 }));
 
 

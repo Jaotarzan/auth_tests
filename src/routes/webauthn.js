@@ -12,7 +12,7 @@ import { Buffer } from "buffer";
 
 const router = Router();
 const rpID = "frontend-ten-eta-85.vercel.app";
-const origin = `https://${rpID}:5173`;
+const origin = `https://${rpID}`;
 
 // Temporário: salvar challenges em memória
 const challenges = {}; // { [userId]: challenge }
